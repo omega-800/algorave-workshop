@@ -7,7 +7,7 @@ theme:
   override:
     footer:
       style: template
-      left: '_\>\__'
+      left: '𝄞'
       center: Algorave workshop
       right: "{current_slide} / {total_slides}"
       height: 3

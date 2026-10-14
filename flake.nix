@@ -26,8 +26,15 @@
           packages = with pkgs; [
             nodejs_22
             alsa-lib
+            git
             presenterm
             qrencode
+
+            supercollider
+            supercolliderPlugins.sc3-plugins
+
+            self.packages.${pkgs.stdenv.hostPlatform.system}.presentation
+            self.packages.${pkgs.stdenv.hostPlatform.system}.strudel-play
           ];
           env = {
             LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:${pkgs.lib.makeLibraryPath [ pkgs.alsa-lib ]}";
@@ -42,9 +49,33 @@
           fs = pkgs.lib.fileset;
           root = ./.;
 
+          strudel-play = derivation {
+            inherit (pkgs.stdenv.hostPlatform) system;
+            name = "strudel-play";
+            src = ./tools/strudel-play.mjs;
+            builder = "${pkgs.bash}/bin/bash";
+            args = [
+              "-c"
+              ''${pkgs.coreutils}/bin/mkdir -p $out/bin $out/libexec &&
+              ${pkgs.coreutils}/bin/install -Dm 755 $src $out/libexec/strudel-play.mjs &&
+              printf '%s\n' \
+                '#!/bin/sh' \
+                'dir=$(dirname "$0")' \
+                'exec "${pkgs.nodejs_22}/bin/node" "$dir/../libexec/strudel-play.mjs" "$@"' \
+                > $out/bin/strudel-play &&
+              ${pkgs.coreutils}/bin/chmod +x $out/bin/strudel-play''
+            ];
+          };
+
           presentation = pkgs.writeShellApplication {
             name = "presentation";
-            text = "${presenterm} -c ./presentation/config.yaml ./presentation/presentation.md";
+            runtimeInputs = [ pkgs.qrencode strudel-play ];
+            text = ''
+              export LD_LIBRARY_PATH="''${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${pkgs.lib.makeLibraryPath [ pkgs.alsa-lib ]}"
+              export STRUDEL_SERVER="$PWD/tools/nvim-strudel/server/dist/index.js"
+              export STRUDEL_LOG_DIR="$PWD/logs"
+              ${presenterm} -c ./presentation/config.yaml ./presentation/presentation.md
+            '';
           };
 
           presentation-pdf = derivation {
@@ -60,13 +91,13 @@
             args = [
               "-c"
               ''${pkgs.coreutils}/bin/mkdir -p $out &&
-              PATH="$PATH:${pkgs.python313Packages.weasyprint}/bin"
+              PATH="$PATH:${strudel-play}/bin:${pkgs.qrencode}/bin:${pkgs.python313Packages.weasyprint}/bin"
                 ${presenterm} -c $src/presentation/config.yaml -e $src/presentation/presentation.md -o $out/presentation.pdf''
             ];
           };
         in
         {
-          inherit presentation presentation-pdf;
+          inherit presentation presentation-pdf strudel-play;
           default = presentation;
         }
       );
