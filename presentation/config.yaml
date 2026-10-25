@@ -10,6 +10,10 @@ snippet:
         filename: "snippet.js"
         commands:
           - ["strudel-play", "$pwd/snippet.js"]
+      tidal:
+        filename: "snippet.tidal"
+        commands:
+          - ["tidal-run", "$pwd/snippet.tidal"]
   exec_replace:
     enable: true
 transition:

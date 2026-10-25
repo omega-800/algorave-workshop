@@ -10,6 +10,46 @@ $: sound("bd sd bd sd")
 
 Press Ctrl+E to hear it. Play it, edit it, hear the change while it keeps playing.
 
+Tidal Cycles live
+===
+
+Patterns are evaluated on numbered tracks (`d1`, `d2`, …). Each pattern loops
+forever and is sent to the sound engine:
+
+```tidal +exec +pty
+ d1 $ sound "bd sd bd sd"
+ d2 $ sound "bd [sd cp]*2"
+```
+
+Press Ctrl+E. Everything is live — type a new pattern over `d1` and it
+replaces the old one in the same step.
+
+> To hear sound, the sound engine (`superdirt-start`) must be running — see the
+> README. If you press Ctrl+E and hear nothing, that's why.
+
+Tidal scales
+===
+
+Tidal doesn't do the music theory for you — you pick a scale with `scale`:
+
+```tidal +exec +pty
+ d1 $ sound "guitar" # (scale "D2 minor" "[0 [~ 0] 4 [3 2] [0 ~] [0 ~] <0 2> ~]")
+```
+
+`scale` turns scale degrees into actual notes. Effects like `# delay`, `# room`,
+`# lpf`, `# gain` stack on with `#`.
+
+Tidal effects
+===
+
+```tidal +exec +pty
+ d1 $ sound "bd sn" # delay 0.5 # room 0.3
+ d2 $ sound "guitar" # n "<0 2 4 7>" # lpf 1000 # gain 0.6
+```
+
+Controls are combined with `#` (strudel uses `.`). Same building blocks, a
+different flavour.
+
 Strudel
 ===
 
@@ -37,6 +77,8 @@ Musical scales
 $: n("[0 [~ 0] 4 [3 2] [0 ~] [0 ~] <0 2> ~]")
   .scale("D2:minor")
 ```
+
+$: s("[bd - sd - - bd sd -], hh*8, [- oh]*2").bank("RolandTR909")
 
 `n` plays scale degrees — the scale does the music theory for you.
 

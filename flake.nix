@@ -25,11 +25,17 @@
         text = ''
           file="''${1:?usage: tidal-run <file.tidal>}"
           [[ -e "$file" ]] || { echo "error: $file not found" >&2; exit 1; }
-          # script="$(mktemp)"
-          # cat "$file" > "$script"
-          # trap 'rm -f "$script"' EXIT
-          # exec tidal-cycles -ghci-script "$script"
-          exec tidal-cycles -ghci-script "$file"
+          if [[ -t 0 ]]; then
+            # Interactive terminal (or a live deck slide): keep the REPL open
+            # so the pattern keeps playing until you stop it.
+            exec tidal-cycles -ghci-script "$file"
+          fi
+          # Non-interactive (PDF/HTML export, pipes): evaluate the file then quit.
+          script="$(mktemp)"
+          cat "$file" > "$script"
+          printf ':quit\n' >> "$script"
+          trap 'rm -f "$script"' EXIT
+          exec tidal-cycles -ghci-script "$script"
         '';
       };
     in
@@ -88,7 +94,7 @@
 
           presentation = pkgs.writeShellApplication {
             name = "presentation";
-            runtimeInputs = [ pkgs.qrencode strudel-play ];
+            runtimeInputs = [ pkgs.qrencode strudel-play (tidalRun pkgs) ];
             text = ''
               export LD_LIBRARY_PATH="''${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${pkgs.lib.makeLibraryPath [ pkgs.alsa-lib ]}"
               export STRUDEL_SERVER="$PWD/tools/nvim-strudel/server/dist/index.js"
