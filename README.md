@@ -129,8 +129,8 @@ immediately, live.
 ### Example
 
 ```tidal
-d1 $ sound "bd sd bd sd"                 # drums
-d2 $ sound "guitar" # (scale "D2 minor" "[0 2 4 7]")   # melody
+d1 $ sound "bd sd bd sd"                 -- drums
+d2 $ sound "guitar" # (scale "D2 minor" "[0 2 4 7]")   -- melody
 ```
 
 Controls are combined with `#` (strudel uses `.`), and `d1`, `d2`, ... are
